@@ -17,8 +17,9 @@ END_SESSION_MSG = \
 	+ "`|           END OF SESSION           |`" + "\n" \
 	+ "`+------------------------------------+`"
 
-C4VC_ROLE_SUF = "_c4vcr"
+C4VC_TC_PRE = "🔒"
 C4VC_TC_SUF = "_c4vct"
+C4VC_ROLE_SUF = "_c4vcr"
 
 client = Client(intents=Intents.all())
 #---------------------------------Functions------------------------------------
@@ -32,7 +33,7 @@ def getRoleName(vcName:str) -> str :
 #
 
 def getTCName(vcName:str) -> str :
-	return makeValidName(vcName) + C4VC_TC_SUF
+	return C4VC_TC_PRE + makeValidName(vcName) + C4VC_TC_SUF
 #
 
 def findRole(guild:Guild, roleName:str) -> Role or None :
@@ -93,7 +94,7 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 		printlvl(lvl, f"Text channel '{tcName}' already exists")
 	else:
 		printlvl(lvl, f"Creating text channel '{tcName}'")
-		tc = await guild.create_text_channel(name=tcName, category=vc.category, position=vc.position)
+		tc = await guild.create_text_channel(name=tcName, category=vc.category)
 		if tc == None:
 			raise Exception("Couldn't create TC")
 	#
