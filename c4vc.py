@@ -141,7 +141,7 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 			await resetRoleMembers(vc, role, lvl=lvl)
 		#
 		# Send a message to the TC marking the end of the Session
-		await tc.send(END_SESSION_MSG)
+		# await tc.send(END_SESSION_MSG)
 	#
 #
 
