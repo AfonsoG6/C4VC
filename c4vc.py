@@ -1,5 +1,5 @@
 #"Application ID" 		857670450175934524
-#"Token"				
+#"Token"				ODU3NjcwNDUwMTc1OTM0NTI0.YNS92g.muxqEFYWSsBHMQ7JUFpbfGNJ3qs
 #"Permissions Integer"	8
 
 #R2K guild.id 			131480252500279296
@@ -205,6 +205,6 @@ async def on_voice_state_update(member:Member, before:VoiceState, after:VoiceSta
 #-----------------------------Run and Connect Bot------------------------------
 
 try:
-	client.run('')
+	client.run('ODU3NjcwNDUwMTc1OTM0NTI0.YNS92g.muxqEFYWSsBHMQ7JUFpbfGNJ3qs')
 except Exception as e:
 	print(e)
