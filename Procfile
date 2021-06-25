@@ -1,1 +1,1 @@
-run : python c4vc.py
+run: python c4vc.py
