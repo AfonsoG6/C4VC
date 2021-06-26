@@ -197,7 +197,7 @@ def cleanUp(guild:Guild):
 async def makePermanentTC(tc:TextChannel):
 	if isTTC(tc.name):
 		await tc.edit(name=getPTCNameFromTTCName(tc.name))
-		await tc.send("This text channel is now **Permanent**. It will be deleted if everyone leaves the VC.")
+		await tc.send("This text channel is now **Permanent**. It won't be deleted even if everyone leaves the VC.")
 	elif isPTC(tc.name):
 		await tc.send("This text channel is already permanent.")
 	else:
@@ -206,7 +206,7 @@ async def makePermanentTC(tc:TextChannel):
 async def makeTransientTC(tc:TextChannel):
 	if isPTC(tc.name):
 		await tc.edit(name=getTTCNameFromPTCName(tc.name))
-		await tc.send("This text channel is now **Transient**. It won't be deleted even if everyone leaves the VC.")
+		await tc.send("This text channel is now **Transient**. It will be deleted if everyone leaves the VC.")
 	elif isTTC(tc.name):
 		await tc.send("This text channel is already transient.")
 	else:
