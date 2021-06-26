@@ -26,33 +26,24 @@ client = Client(intents=Intents.all())
 
 def printlvl(lvl:int, text:str):
 	print("\t"*lvl + text)
-#
 
 def getRoleName(vcName:str) -> str :
 	return makeValidName(vcName) + C4VC_ROLE_SUF
-#
 
 def getTCName(vcName:str) -> str :
 	return C4VC_TC_PRE + makeValidName(vcName) + C4VC_TC_SUF
-#
 
 def findRole(guild:Guild, roleName:str) -> Role or None :
 	for role in guild.roles:
 		if role.name == roleName:
 			return role
-		#
-	#
 	return None
-#
 
 def findTC(guild:Guild, tcName:str) -> TextChannel or None :
 	for tc in guild.text_channels:
 		if tc.name == tcName:
 			return tc
-		#
-	#
 	return None
-#
 
 def makeValidName(name:str) -> str :
 	# Remove emojis
@@ -63,11 +54,9 @@ def makeValidName(name:str) -> str :
 	# OPTIONAL: Remove underscores at the begining
 	while len(newName) >= 2 and newName[0] == "_":
 		newName = newName[1:]
-	#
 	# Transform into lowercase
 	newName = newName.lower()
 	return newName
-#
 
 async def setupRole(vc:VoiceChannel, lvl:int) -> Role :
 	guild = vc.guild
@@ -81,10 +70,7 @@ async def setupRole(vc:VoiceChannel, lvl:int) -> Role :
 		role = await guild.create_role(name=roleName)
 		if role == None:
 			raise Exception("Couldn't create role")
-		#
-	#
 	return role
-#
 
 async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 	guild = vc.guild
@@ -97,28 +83,22 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 		tc = await guild.create_text_channel(name=tcName, category=vc.category)
 		if tc == None:
 			raise Exception("Couldn't create TC")
-	#
 	await tc.set_permissions(guild.default_role, send_messages=False, read_messages=False)
 	await tc.set_permissions(role, send_messages=True, read_messages=True)
 	return tc
-#
 
 async def setupRoleAndTC(vc:VoiceChannel, lvl:int):
 	role = await setupRole(vc, lvl=lvl)
 	await setupTC(vc, role, lvl=lvl)
-#
 
 async def resetRoleMembers(vc:VoiceChannel, role:Role, lvl:int):
 	printlvl(lvl, f"Resetting members of role '{role.name}'")
 	for member in role.members:
 		printlvl(lvl+1, f"Removing role '{role.name}' from '{member.name}'")
 		await member.remove_roles(role, reason="Resetting Role")
-	#
 	for member in vc.members:
 		printlvl(lvl+1, f"Adding role '{role.name}' to '{member.name}'")
 		await member.add_roles(role, reason="Resetting Role and User is in VC")
-	#
-#
 
 async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 	guild = vc.guild
@@ -128,7 +108,6 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 	role = findRole(guild, getRoleName(vcName))
 	if role != None:
 		await member.remove_roles(role, reason="User left VC")
-	#
 
 	if len(vc.members) <= 0:
 		# Check if the Role and TC exist, if not, create them
@@ -136,15 +115,11 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 		if role == None or tc == None:
 			await setupRoleAndTC(vc, lvl=lvl)
 			role = findRole(guild, getRoleName(vcName))
-		#
 		# Check if the role has members, if it has, reset it since it shouldn't
 		if len(role.members) > 0:
 			await resetRoleMembers(vc, role, lvl=lvl)
-		#
 		# Send a message to the TC marking the end of the Session
 		# await tc.send(END_SESSION_MSG)
-	#
-#
 
 async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 	vcName = vc.name
@@ -154,9 +129,7 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 	tc = findTC(vc.guild, getTCName(vcName))
 	if role == None or tc == None:
 		await setupRoleAndTC(vc, lvl=lvl+1)
-	#
 	await member.add_roles(role, reason="User joined VC")
-#
 
 def cleanUp(guild:Guild):
 	expectedTCNames = []
@@ -164,20 +137,14 @@ def cleanUp(guild:Guild):
 	for vc in guild.voice_channels:
 		expectedTCNames += [getTCName(vc.name)]
 		expectedRoleNames += [getRoleName(vc.name)]
-	#
 	pattern = re.compile(pattern = f"*{C4VC_TC_SUF}$")
 	for tc in guild.text_channels:
 		if pattern.fullmatch(tc.name) and tc.name not in expectedTCNames:
 			tc.delete()
-		#
-	#
 	pattern = re.compile(pattern = f"*{C4VC_ROLE_SUF}$")
 	for role in guild.roles:
 		if pattern.fullmatch(role.name) and role.name not in expectedRoleNames:
 			role.delete()
-		#
-	#
-#
 
 #----------------------------------Events--------------------------------------
 @client.event
@@ -187,21 +154,15 @@ async def on_ready():
 		for vc in guild.voice_channels:
 			print(f"\tSetting up voice channel with valid name '{makeValidName(vc.name)}'")
 			await setupRoleAndTC(vc, lvl=2)
-		#
-	#
 	print(f"Finished setup. Logged in as {client.user}")
-#
 
 @client.event
 async def on_voice_state_update(member:Member, before:VoiceState, after:VoiceState):
 	print("\nDetected a voice state update")
 	if (before.channel != None) and ((after.channel == None) or (after.channel.id != before.channel.id)):
 		await processUserLeave(before.channel, member, lvl=1)
-	#
 	if (after.channel != None) and ((before.channel == None) or (before.channel.id != after.channel.id)):
 		await processUserJoin(after.channel, member, lvl=1)
-	#
-#
 
 #-----------------------------Run and Connect Bot------------------------------
 
