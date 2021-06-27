@@ -128,9 +128,9 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 			raise Exception("Couldn't create TC")
 		await tc.set_permissions(guild.default_role, send_messages=False, read_messages=False)
 		await tc.set_permissions(role, send_messages=True, read_messages=True)
-		await tc.send(f"This text channel is private for people on the VC: {vc.name}\n"\
-				+ f"This channel is currently **Transient**. " \
-				+ f"You can change this by writing `{MAKE_PTC_COMMAND}` or `{MAKE_TTC_COMMAND}` in this channel")
+		await tc.send(f"This text channel is private for people on the VC: **{vc.name}**\n"\
+				+ f"This channel is currently **Transient**. Which means that it will be deleted when everyone leaves the VC.\n" \
+				+ f"You can change this behavior by writing `{MAKE_PTC_COMMAND}` or `{MAKE_TTC_COMMAND}` in this channel.")
 	return tc
 
 async def setupRoleAndTC(vc:VoiceChannel, lvl:int):
