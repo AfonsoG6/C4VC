@@ -20,9 +20,9 @@ END_SESSION_MSG = \
 	+ "`+------------------------------------+`"
 
 C4VC_TC_PRE = "🔒"
-C4VC_TTC_SUF = "-c4vcttc"
-C4VC_PTC_SUF = "-c4vcptc"
-C4VC_ROLE_SUF = "-c4vcrole"
+C4VC_TTC_SUF = "-ttc4vc"
+C4VC_PTC_SUF = "-ptc4vc"
+C4VC_ROLE_SUF = "-role4vc"
 
 MAKE_TTC_COMMAND = "?transient"
 MAKE_PTC_COMMAND = "?permanent"
