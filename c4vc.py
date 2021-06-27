@@ -164,15 +164,16 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 
 	if len(vc.members) <= 0:
 		await cleanUp(guild, lvl+1)
-		# Check if the Role and TC exist, if not, create them
+
 		tc = await findTC(guild, vcName)
 		if role == None or tc == None:
 			await setupRoleAndTC(vc, lvl=lvl)
 			role = findRole(guild, vcName)
-		# Check if the role has members, if it has, reset it since it shouldn't
+			tc = await findTC(guild, vcName)
+
 		if len(role.members) > 0:
 			await resetRoleMembers(vc, role, lvl=lvl)
-		# Send a message to the TC marking the end of the Session
+
 		if isTTC(tc.name):
 			printlvl(lvl+1, f"Deleting TTC '{tc.name}' from '{tc.guild.name}'")
 			await tc.delete()
