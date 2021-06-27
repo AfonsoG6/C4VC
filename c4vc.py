@@ -8,7 +8,7 @@
 
 #Compile to exe			pyinstaller chat4voicecall.py -F
 
-from typing import Text
+from asyncio import Lock
 from discord import *
 import re
 
@@ -30,6 +30,8 @@ MAKE_PTC_COMMAND = "?permanent"
 DO_SEND_ESMSG = False	# If bot sends a message marking the end of the session in a PTC
 
 client = Client(intents=Intents.all())
+
+locks:dict = {}
 
 #---------------------------------Functions------------------------------------
 
@@ -101,12 +103,12 @@ async def setupRole(vc:VoiceChannel, lvl:int) -> Role :
 	role = findRole(guild, vc.name)
 	if role != None:
 		printlvl(lvl, f"Role '{roleName}' already exists.")
-		await resetRoleMembers(vc, role, lvl=lvl+1)
 	else:
 		printlvl(lvl, f"Creating role '{roleName}'")
 		role = await guild.create_role(name=roleName)
 		if role == None:
 			raise Exception("Couldn't create role")
+	await resetRoleMembers(vc, role, lvl=lvl+1)
 	return role
 
 async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
@@ -130,8 +132,15 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 	return tc
 
 async def setupRoleAndTC(vc:VoiceChannel, lvl:int):
-	role = await setupRole(vc, lvl=lvl)
-	await setupTC(vc, role, lvl=lvl)
+	vcValidName = makeValidName(vc)
+	if vcValidName in locks.keys():
+		lock = locks[vcValidName]
+	else:
+		lock = locks[vcValidName] = Lock()
+
+	async with lock:
+		role = await setupRole(vc, lvl=lvl)
+		await setupTC(vc, role, lvl=lvl)
 
 async def resetRoleMembers(vc:VoiceChannel, role:Role, lvl:int):
 	printlvl(lvl, f"Resetting members of role '{role.name}'")
