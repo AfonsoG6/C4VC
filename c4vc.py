@@ -155,38 +155,37 @@ async def resetRoleMembers(vc:VoiceChannel, role:Role, lvl:int):
 
 async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 	guild = vc.guild
-	vcName = vc.name
 
-	printlvl(lvl, f"User '{member.name}' left VC '{vcName}'")
-	role = findRole(guild, vcName)
+	printlvl(lvl, f"User '{member.name}' left VC '{vc.name}'")
+	role = findRole(guild, vc.name)
 	if role != None:
 		await member.remove_roles(role, reason="User left VC")
 
 	if len(vc.members) <= 0:
+		tc = await findTC(guild, vc.name)
+
+		if role != None and len(role.members) > 0:
+			await resetRoleMembers(vc, role, lvl=lvl+1)
+		
+		if tc != None and isTTC(tc.name):
+			printlvl(lvl+1, f"Deleting TTC '{tc.name}' from '{guild.name}'")
+			await tc.delete()
+
+		if isPTC(tc.name):
+			if role == None:
+				setupRoleAndTC(vc, lvl=lvl+1)
+				role = findRole(guild, vc.name)
+			await resetRoleMembers(vc, role, lvl=lvl+1)
+			if DO_SEND_ESMSG:
+				printlvl(lvl+1, f"Sending END_SESSION_MSG to PTC '{tc.name}' from '{guild.name}'")
+				await tc.send(END_SESSION_MSG)
+		
 		await cleanUp(guild, lvl+1)
 
-		tc = await findTC(guild, vcName)
-		if role == None or tc == None:
-			await setupRoleAndTC(vc, lvl=lvl)
-			role = findRole(guild, vcName)
-			tc = await findTC(guild, vcName)
-
-		if len(role.members) > 0:
-			await resetRoleMembers(vc, role, lvl=lvl)
-
-		if isTTC(tc.name):
-			printlvl(lvl+1, f"Deleting TTC '{tc.name}' from '{tc.guild.name}'")
-			await tc.delete()
-		if isPTC(tc.name) and DO_SEND_ESMSG:
-			printlvl(lvl+1, f"Sending END_SESSION_MSG to PTC '{tc.name}' from '{tc.guild.name}'")
-			await tc.send(END_SESSION_MSG)
-
 async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
-	vcName = vc.name
-
-	printlvl(lvl, f"User '{member.name}' joined VC '{vcName}'")
-	role = findRole(vc.guild, vcName)
-	tc = await findTC(vc.guild, vcName)
+	printlvl(lvl, f"User '{member.name}' joined VC '{vc.name}'")
+	role = findRole(vc.guild, vc.name)
+	tc = await findTC(vc.guild, vc.name)
 	if role == None or tc == None:
 		await setupRoleAndTC(vc, lvl=lvl+1)
 	await member.add_roles(role, reason="User joined VC")
