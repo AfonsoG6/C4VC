@@ -171,7 +171,7 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 			printlvl(lvl+1, f"Deleting TTC '{tc.name}' from '{guild.name}'")
 			await tc.delete()
 
-		if isPTC(tc.name):
+		if tc != None and isPTC(tc.name):
 			if role == None:
 				setupRoleAndTC(vc, lvl=lvl+1)
 				role = findRole(guild, vc.name)
