@@ -188,6 +188,7 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 	tc = await findTC(vc.guild, vc.name)
 	if role == None or tc == None:
 		await setupRoleAndTC(vc, lvl=lvl+1)
+		role = findRole(vc.guild, vc.name)
 	await member.add_roles(role, reason="User joined VC")
 
 async def makePermanentTC(tc:TextChannel):
