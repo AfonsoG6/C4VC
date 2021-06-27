@@ -163,7 +163,7 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 		await member.remove_roles(role, reason="User left VC")
 
 	if len(vc.members) <= 0:
-		await cleanUp(guild)
+		await cleanUp(guild, lvl+1)
 		# Check if the Role and TC exist, if not, create them
 		tc = await findTC(guild, vcName)
 		if role == None or tc == None:
@@ -174,8 +174,10 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 			await resetRoleMembers(vc, role, lvl=lvl)
 		# Send a message to the TC marking the end of the Session
 		if isTTC(tc.name):
+			printlvl(lvl+1, f"Deleting TTC '{tc.name}' from '{tc.guild.name}'")
 			await tc.delete()
 		if isPTC(tc.name) and DO_SEND_ESMSG:
+			printlvl(lvl+1, f"Sending END_SESSION_MSG to PTC '{tc.name}' from '{tc.guild.name}'")
 			await tc.send(END_SESSION_MSG)
 
 async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
@@ -210,10 +212,11 @@ async def makeTransientTC(tc:TextChannel):
 	else:
 		await tc.send("This text channel is not managed by C4VC.")
 
-async def cleanUp(guild:Guild):
+async def cleanUp(guild:Guild, lvl:int):
 	expectedTCNames = []
 	expectedRoleNames = []
 
+	printlvl(lvl, f"Cleaning up '{guild.name}'")
 	for vc in guild.voice_channels:
 		expectedTCNames += [getTTCName(vc.name), getPTCName(vc.name)]
 		expectedRoleNames += [getRoleName(vc.name)]
@@ -221,11 +224,13 @@ async def cleanUp(guild:Guild):
 	for tc in guild.text_channels:
 		if re.search(pattern = rf"({C4VC_TTC_SUF}|{C4VC_PTC_SUF})$", string=tc.name) != None \
 				and tc.name not in expectedTCNames:
+			printlvl(lvl+1, f"Deleting TC '{tc.name}'")
 			await tc.delete()
 
 	for role in guild.roles:
 		if re.search(pattern = rf"{C4VC_ROLE_SUF}$", string=role.name) != None \
 				and role.name not in expectedRoleNames:
+			printlvl(lvl+1, f"Deleting Role '{role.name}'")
 			await role.delete()
 
 #----------------------------------Events--------------------------------------
@@ -233,20 +238,19 @@ async def cleanUp(guild:Guild):
 @client.event
 async def on_ready():
 	for guild in client.guilds:
-		printlvl(0, f"Setting up guild: {guild.name}")
+		printlvl(0, f"Setting up guild '{guild.name}'")
 		for vc in guild.voice_channels:
 			if len(vc.members) > 0:
-				printlvl(1, f"Setting up voice channel with valid name '{vc.name}'")
+				printlvl(1, f"Setting up VC '{vc.name}'")
 				await setupRoleAndTC(vc, lvl=2)
 	printlvl(0, f"Finished setup. Logged in as {client.user}")
 
 @client.event
 async def on_voice_state_update(member:Member, before:VoiceState, after:VoiceState):
-	printlvl(0, "\nDetected a voice state update")
 	if (before.channel != None) and ((after.channel == None) or (after.channel.id != before.channel.id)):
-		await processUserLeave(before.channel, member, lvl=1)
+		await processUserLeave(before.channel, member, lvl=0)
 	if (after.channel != None) and ((before.channel == None) or (before.channel.id != after.channel.id)):
-		await processUserJoin(after.channel, member, lvl=1)
+		await processUserJoin(after.channel, member, lvl=0)
 
 @client.event
 async def on_message(message:Message):
