@@ -152,6 +152,7 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 		await member.remove_roles(role, reason="User left VC")
 
 	if len(vc.members) <= 0:
+		await cleanUp(guild)
 		# Check if the Role and TC exist, if not, create them
 		tc = await findTC(guild, vcName)
 		if role == None or tc == None:
@@ -176,24 +177,6 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 		await setupRoleAndTC(vc, lvl=lvl+1)
 	await member.add_roles(role, reason="User joined VC")
 
-def cleanUp(guild:Guild):
-	expectedTCNames = []
-	expectedRoleNames = []
-
-	for vc in guild.voice_channels:
-		expectedTCNames += [getTTCName(vc.name), getPTCName(vc.name)]
-		expectedRoleNames += [getRoleName(vc.name)]
-
-	for tc in guild.text_channels:
-		if re.search(pattern = rf"({C4VC_TTC_SUF}|{C4VC_PTC_SUF})$", string=tc.name) != None \
-				and tc.name not in expectedTCNames:
-			tc.delete()
-
-	for role in guild.roles:
-		if re.search(pattern = rf"{C4VC_ROLE_SUF}$", string=role.name) != None \
-				and role.name not in expectedRoleNames:
-			role.delete()
-
 async def makePermanentTC(tc:TextChannel):
 	if isTTC(tc.name):
 		await tc.edit(name=getPTCNameFromTTCName(tc.name))
@@ -211,6 +194,24 @@ async def makeTransientTC(tc:TextChannel):
 		await tc.send("This text channel is already transient.")
 	else:
 		await tc.send("This text channel is not managed by C4VC.")
+
+async def cleanUp(guild:Guild):
+	expectedTCNames = []
+	expectedRoleNames = []
+
+	for vc in guild.voice_channels:
+		expectedTCNames += [getTTCName(vc.name), getPTCName(vc.name)]
+		expectedRoleNames += [getRoleName(vc.name)]
+
+	for tc in guild.text_channels:
+		if re.search(pattern = rf"({C4VC_TTC_SUF}|{C4VC_PTC_SUF})$", string=tc.name) != None \
+				and tc.name not in expectedTCNames:
+			await tc.delete()
+
+	for role in guild.roles:
+		if re.search(pattern = rf"{C4VC_ROLE_SUF}$", string=role.name) != None \
+				and role.name not in expectedRoleNames:
+			await role.delete()
 
 #----------------------------------Events--------------------------------------
 
