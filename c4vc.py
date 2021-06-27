@@ -173,7 +173,7 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 
 		if tc != None and isPTC(tc.name):
 			if role == None:
-				setupRoleAndTC(vc, lvl=lvl+1)
+				await setupRoleAndTC(vc, lvl=lvl+1)
 				role = findRole(guild, vc.name)
 			await resetRoleMembers(vc, role, lvl=lvl+1)
 			if DO_SEND_ESMSG:
