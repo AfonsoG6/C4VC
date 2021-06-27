@@ -132,7 +132,7 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 	return tc
 
 async def setupRoleAndTC(vc:VoiceChannel, lvl:int):
-	vcValidName = makeValidName(vc)
+	vcValidName = makeValidName(vc.name)
 	if vcValidName in locks.keys():
 		lock = locks[vcValidName]
 	else:
