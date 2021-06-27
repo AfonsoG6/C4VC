@@ -36,7 +36,9 @@ locks:dict = {}
 #---------------------------------Functions------------------------------------
 
 def printlvl(lvl:int, text:str):
-	print("\t"*lvl + text)
+	pattern = re.compile(pattern = r"[^\x00-\x7F]+", flags = re.UNICODE)
+	onlyAsciiText = pattern.sub(r'', text)
+	print("\t"*lvl + onlyAsciiText)
 
 def getRoleName(vcName:str) -> str :
 	return makeValidName(vcName) + C4VC_ROLE_SUF
@@ -86,7 +88,7 @@ async def findTC(guild:Guild, vcName:str) -> TextChannel or None :
 
 def makeValidName(name:str) -> str :
 	# Remove emojis
-	pattern = re.compile(pattern = r"[^a-zA-Z0-9_ ]+", flags = re.UNICODE)
+	pattern = re.compile(pattern = r"[^a-zA-Z0-9_\- ]+", flags = re.UNICODE)
 	newName = pattern.sub(r'', name)
 	# Replace spaces with underscores
 	newName = newName.replace(" ", "_")
@@ -115,12 +117,12 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 	guild = vc.guild
 	tc = await findTC(guild, vc.name)
 	if tc != None:
-		printlvl(lvl, f"Text channel '{makeValidName(tc.name)}' already exists")
+		printlvl(lvl, f"Text channel '{tc.name}' already exists")
 		await tc.set_permissions(guild.default_role, send_messages=False, read_messages=False)
 		await tc.set_permissions(role, send_messages=True, read_messages=True)
 	else:
 		ttcName = getTTCName(vc.name)
-		printlvl(lvl, f"Creating text channel '{makeValidName(ttcName)}'")
+		printlvl(lvl, f"Creating text channel '{ttcName}'")
 		tc = await guild.create_text_channel(name=ttcName, category=vc.category)
 		if tc == None:
 			raise Exception("Couldn't create TC")
@@ -145,17 +147,17 @@ async def setupRoleAndTC(vc:VoiceChannel, lvl:int):
 async def resetRoleMembers(vc:VoiceChannel, role:Role, lvl:int):
 	printlvl(lvl, f"Resetting members of role '{role.name}'")
 	for member in role.members:
-		printlvl(lvl+1, f"Removing role '{role.name}' from '{makeValidName(member.name)}'")
+		printlvl(lvl+1, f"Removing role '{role.name}' from '{member.name}'")
 		await member.remove_roles(role, reason="Resetting Role")
 	for member in vc.members:
-		printlvl(lvl+1, f"Adding role '{role.name}' to '{makeValidName(member.name)}'")
+		printlvl(lvl+1, f"Adding role '{role.name}' to '{member.name}'")
 		await member.add_roles(role, reason="Resetting Role and User is in VC")
 
 async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 	guild = vc.guild
 	vcName = vc.name
 
-	printlvl(lvl, f"User '{makeValidName(member.name)}' left VC '{makeValidName(vcName)}'")
+	printlvl(lvl, f"User '{member.name}' left VC '{vcName}'")
 	role = findRole(guild, vcName)
 	if role != None:
 		await member.remove_roles(role, reason="User left VC")
@@ -179,7 +181,7 @@ async def processUserLeave(vc:VoiceChannel, member:Member, lvl:int):
 async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 	vcName = vc.name
 
-	printlvl(lvl, f"User '{member.name}' joined VC '{makeValidName(vcName)}'")
+	printlvl(lvl, f"User '{member.name}' joined VC '{vcName}'")
 	role = findRole(vc.guild, vcName)
 	tc = await findTC(vc.guild, vcName)
 	if role == None or tc == None:
@@ -188,18 +190,22 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 
 async def makePermanentTC(tc:TextChannel):
 	if isTTC(tc.name):
+		printlvl(0, f"Making '{tc.name}' from '{tc.guild.name}' Permanent")
 		await tc.edit(name=getPTCNameFromTTCName(tc.name))
 		await tc.send("This text channel is now **Permanent**. It won't be deleted even if everyone leaves the VC.")
 	elif isPTC(tc.name):
+		printlvl(0, f"Tried to make '{tc.name}' from '{tc.guild.name}' Permanent. But it is already Permanent")
 		await tc.send("This text channel is already permanent.")
 	else:
 		await tc.send("This text channel is not managed by C4VC.")
 
 async def makeTransientTC(tc:TextChannel):
 	if isPTC(tc.name):
+		printlvl(0, f"Making '{tc.name}' from '{tc.guild.name}' Transient")
 		await tc.edit(name=getTTCNameFromPTCName(tc.name))
 		await tc.send("This text channel is now **Transient**. It will be deleted if everyone leaves the VC.")
 	elif isTTC(tc.name):
+		printlvl(0, f"Tried to make '{tc.name}' from '{tc.guild.name}' Transient. But it is already Transient")
 		await tc.send("This text channel is already transient.")
 	else:
 		await tc.send("This text channel is not managed by C4VC.")
@@ -227,16 +233,16 @@ async def cleanUp(guild:Guild):
 @client.event
 async def on_ready():
 	for guild in client.guilds:
-		print(f"Setting up guild: {guild.name}")
+		printlvl(0, f"Setting up guild: {guild.name}")
 		for vc in guild.voice_channels:
 			if len(vc.members) > 0:
-				print(f"\tSetting up voice channel with valid name '{makeValidName(vc.name)}'")
+				printlvl(1, f"Setting up voice channel with valid name '{vc.name}'")
 				await setupRoleAndTC(vc, lvl=2)
-	print(f"Finished setup. Logged in as {client.user}")
+	printlvl(0, f"Finished setup. Logged in as {client.user}")
 
 @client.event
 async def on_voice_state_update(member:Member, before:VoiceState, after:VoiceState):
-	print("\nDetected a voice state update")
+	printlvl(0, "\nDetected a voice state update")
 	if (before.channel != None) and ((after.channel == None) or (after.channel.id != before.channel.id)):
 		await processUserLeave(before.channel, member, lvl=1)
 	if (after.channel != None) and ((before.channel == None) or (before.channel.id != after.channel.id)):
