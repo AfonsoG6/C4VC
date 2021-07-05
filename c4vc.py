@@ -233,10 +233,42 @@ async def cleanUp(guild:Guild, lvl:int):
 			printlvl(lvl+1, f"Deleting Role '{role.name}'")
 			await role.delete()
 
+async def renameTC(guild:Guild, beforeName:str, afterName:str) -> bool:
+	tc = await findTC(guild, beforeName)
+
+	if tc == None:
+		printlvl(1, f"There is currently no TC for this VC.")
+		return False
+
+	if isTTC(tc.name):
+		newTCName = getTTCName(afterName)
+	elif isPTC(tc.name):
+		newTCName = getPTCName(afterName)
+
+	printlvl(1, f"Renaming TC {tc.name} to {newTCName}")
+	await tc.edit(name=newTCName)
+	return True
+
+
+async def renameRole(guild:Guild, beforeName:str, afterName:str) -> bool:
+	role = findRole(guild, beforeName)
+
+	if role == None:
+		printlvl(1, f"There is currently no Role for this VC.")
+		return False
+
+	newRoleName = getRoleName(afterName)
+
+	printlvl(1, f"Renaming Role {role.name} to {newRoleName}")
+	await role.edit(name=newRoleName)
+	return True
+
 #----------------------------------Events--------------------------------------
 
 @client.event
 async def on_ready():
+	#await client.change_presence(activity=Game(""))
+
 	for guild in client.guilds:
 		printlvl(0, f"Setting up guild '{guild.name}'")
 		for vc in guild.voice_channels:
@@ -261,6 +293,20 @@ async def on_message(message:Message):
 		await makeTransientTC(tc)
 	if message.content.lower() == MAKE_PTC_COMMAND:
 		await makePermanentTC(tc)
+
+@client.event
+async def on_guild_channel_update(before:abc.GuildChannel, after:abc.GuildChannel):
+	if not (isinstance(before, VoiceChannel) and isinstance(after, VoiceChannel)):
+		return
+	if before.name == after.name:
+		return
+
+	guild = before.guild
+	printlvl(0, f"VC {before.name} from {guild} was renamed to {after.name}")
+	didChangeRole = await renameRole(guild, before.name, after.name)
+	didChangeTC = await renameTC(guild, before.name, after.name)
+	if not (didChangeRole and didChangeTC):
+		await setupRoleAndTC(after, 2)
 
 #-----------------------------Run and Connect Bot------------------------------
 
