@@ -25,7 +25,10 @@ C4VC_PTC_SUF = "-ptc4vc"
 C4VC_ROLE_SUF = "-role4vc"
 
 MAKE_TTC_COMMAND = "?transient"
+MAKE_TTC_COMMAND_ABREV = "?t"
+
 MAKE_PTC_COMMAND = "?permanent"
+MAKE_PTC_COMMAND_ABREV = "?p"
 
 DO_SEND_ESMSG = False	# If bot sends a message marking the end of the session in a PTC
 
@@ -130,7 +133,7 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 		await tc.set_permissions(role, send_messages=True, read_messages=True)
 		await tc.send(f"This text channel is private for people on the VC: **{vc.name}**\n"\
 				+ f"This channel is currently **Transient**. Which means that it will be deleted when everyone leaves the VC.\n" \
-				+ f"You can change this behavior by writing `{MAKE_PTC_COMMAND}` or `{MAKE_TTC_COMMAND}` in this channel.")
+				+ f"You can change this behavior by writing `{MAKE_PTC_COMMAND}`/`{MAKE_PTC_COMMAND_ABREV}` or `{MAKE_TTC_COMMAND}`/`{MAKE_TTC_COMMAND_ABREV}` in this channel.")
 	return tc
 
 async def setupRoleAndTC(vc:VoiceChannel, lvl:int):
@@ -289,9 +292,9 @@ async def on_message(message:Message):
 	tc = message.channel
 	if message.author.bot:
 		return
-	if message.content.lower() == MAKE_TTC_COMMAND:
+	if message.content in [MAKE_TTC_COMMAND, MAKE_TTC_COMMAND_ABREV]:
 		await makeTransientTC(tc)
-	if message.content.lower() == MAKE_PTC_COMMAND:
+	elif message.content in [MAKE_PTC_COMMAND, MAKE_PTC_COMMAND_ABREV]:
 		await makePermanentTC(tc)
 
 @client.event
@@ -305,7 +308,7 @@ async def on_guild_channel_update(before:abc.GuildChannel, after:abc.GuildChanne
 	printlvl(0, f"VC {before.name} from {guild} was renamed to {after.name}")
 	didChangeRole = await renameRole(guild, before.name, after.name)
 	didChangeTC = await renameTC(guild, before.name, after.name)
-	if not (didChangeRole and didChangeTC):
+	if (not didChangeRole or not didChangeTC) and len(after.members) > 0:
 		await setupRoleAndTC(after, 2)
 
 #-----------------------------Run and Connect Bot------------------------------
