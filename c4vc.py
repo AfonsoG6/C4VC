@@ -10,7 +10,7 @@
 
 from asyncio import Lock
 from discord import *
-import unicodedata
+from unicodedata import normalize
 import re
 
 #-----------------------Initiate all global variables--------------------------
@@ -40,10 +40,24 @@ locks:dict = {}
 #---------------------------------Functions------------------------------------
 
 def printlvl(lvl:int, text:str):
-	text = unicodedata.normalize("NFKC", text)
+	text = normalize("NFKD", text)
 	pattern = re.compile(pattern = r"[^\x00-\x7F]+", flags = re.UNICODE)
 	onlyAsciiText = pattern.sub(r'', text)
 	print("\t"*lvl + onlyAsciiText)
+
+def makeValidName(name:str) -> str :
+	name = normalize('NFKD', name)
+	# Remove emojis
+	pattern = re.compile(pattern = r"[^a-zA-Z0-9_\- ]+", flags = re.UNICODE)
+	name = pattern.sub('', name)
+	# Replace spaces with underscores
+	name = name.replace(" ", "_")
+	# OPTIONAL: Remove underscores at the begining
+	while len(name) >= 2 and name[0] == "_":
+		name = name[1:]
+	# Transform into lowercase
+	name = name.lower()
+	return name
 
 def getRoleName(vcName:str) -> str :
 	return makeValidName(vcName) + C4VC_ROLE_SUF
@@ -90,20 +104,6 @@ async def findTC(guild:Guild, vcName:str) -> TextChannel or None :
 		return ttc
 	elif ptc != None:
 		return ptc
-
-def makeValidName(name:str) -> str :
-	name = unicodedata.normalize('NFKC', name)
-	# Remove emojis
-	pattern = re.compile(pattern = r"[^a-zA-Z0-9_\- ]+", flags = re.UNICODE)
-	name = pattern.sub('', name)
-	# Replace spaces with underscores
-	name = name.replace(" ", "_")
-	# OPTIONAL: Remove underscores at the begining
-	while len(name) >= 2 and name[0] == "_":
-		name = name[1:]
-	# Transform into lowercase
-	name = name.lower()
-	return name
 
 async def setupRole(vc:VoiceChannel, lvl:int) -> Role :
 	guild = vc.guild
