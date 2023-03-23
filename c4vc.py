@@ -15,10 +15,9 @@ import re
 
 #-----------------------Initiate all global variables--------------------------
 
-END_SESSION_MSG = \
-	  "`+------------------------------------+`" + "\n" \
-	+ "`|           END OF SESSION           |`" + "\n" \
-	+ "`+------------------------------------+`"
+END_SESSION_MSG = "`+------------------------------------+`" + "\n" \
+				+ "`|           END OF SESSION           |`" + "\n" \
+				+ "`+------------------------------------+`"
 
 C4VC_TC_PRE = "🔒"
 C4VC_TTC_SUF = "-ttc4vc"
@@ -31,7 +30,7 @@ MAKE_TTC_COMMAND_ABREV = "?t"
 MAKE_PTC_COMMAND = "?permanent"
 MAKE_PTC_COMMAND_ABREV = "?p"
 
-DO_SEND_ESMSG = False	# If bot sends a message marking the end of the session in a PTC
+DO_SEND_ESMSG = True	# If bot sends a message marking the end of the session in a PTC
 
 client = Client(intents=Intents.all())
 
@@ -121,9 +120,14 @@ async def setupRole(vc:VoiceChannel, lvl:int) -> Role :
 
 async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 	guild = vc.guild
-	tc = await findTC(guild, vc.name)
+	tc: TextChannel = await findTC(guild, vc.name)
 	if tc != None:
 		printlvl(lvl, f"Text channel '{tc.name}' already exists")
+		# Remove all permissions from the channel
+		await tc.edit(sync_permissions=False)
+		for perm in tc.overwrites:
+			printlvl(lvl, f"Removing permission '{perm}' from '{tc.name}'")
+			await tc.set_permissions(perm, overwrite=None)
 		await tc.set_permissions(guild.default_role, send_messages=False, read_messages=False)
 		await tc.set_permissions(role, send_messages=True, read_messages=True)
 	else:
@@ -132,6 +136,10 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
 		tc = await guild.create_text_channel(name=ttcName, category=vc.category)
 		if tc == None:
 			raise Exception("Couldn't create TC")
+		# Remove all permissions from the channel
+		await tc.edit(sync_permissions=False)
+		for perm in tc.overwrites:
+			await tc.set_permissions(perm, overwrite=None)
 		await tc.set_permissions(guild.default_role, send_messages=False, read_messages=False)
 		await tc.set_permissions(role, send_messages=True, read_messages=True)
 		await tc.send(f"This text channel is private for people on the VC: **{vc.name}**\n"\
