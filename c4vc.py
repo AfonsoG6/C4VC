@@ -217,7 +217,7 @@ async def makePermanentTC(tc:TextChannel, lvl:int):
     if isTTC(tc.name):
         printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Permanent")
         await tc.edit(name=getPTCNameFromTTCName(tc.name))
-        await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
+        #await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
         await tc.send(PTC_MESSAGE)
     elif isPTC(tc.name):
         printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Permanent. But it is already Permanent")
@@ -229,7 +229,7 @@ async def makeTransientTC(tc:TextChannel, lvl:int):
     if isPTC(tc.name):
         printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Transient")
         await tc.edit(name=getTTCNameFromPTCName(tc.name))
-        await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
+        #await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
         await tc.send(TTC_MESSAGE)
     elif isTTC(tc.name):
         printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Transient. But it is already Transient")
