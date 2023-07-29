@@ -11,10 +11,11 @@ END_SESSION_MSG = "`+------------------------------------+`" + "\n" \
                 + "`|           END OF SESSION           |`" + "\n" \
                 + "`+------------------------------------+`"
 
-C4VC_TC_PRE = "🔒᲼"
+# Invisible characters are used for uniqueness
+C4VC_TC_PRE = "🔒"
 C4VC_TTC_SUF = "᲼🇹"
 C4VC_PTC_SUF = "᲼🇵"
-C4VC_ROLE_SUF = "᲼Role"
+C4VC_ROLE_SUF = "᲼role"
 
 MAKE_TTC_COMMAND = "?transient"
 MAKE_TTC_COMMAND_ABREV = "?t"
