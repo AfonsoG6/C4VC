@@ -85,9 +85,11 @@ def getUpdatedTopic(tc:TextChannel, lvl:int) -> str :
     if len(lines) != 3:
         printlvl(lvl, f"Invalid topic format: '{tc.topic}'")
         raise Exception("Invalid topic format")
-    return lines[0] + "\n" \
+    newTopic = lines[0] + "\n" \
     + (TTC_MESSAGE if isTTC(tc.name) else PTC_MESSAGE).replace("now", "currently") + "\n" \
     + lines[2]
+    printlvl(lvl, f"Updated topic: '{newTopic}'")
+    return newTopic
 
 def findRole(guild:Guild, vcName:str) -> Role or None :
     roleName = getRoleName(vcName)
@@ -214,7 +216,8 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 async def makePermanentTC(tc:TextChannel, lvl:int):
     if isTTC(tc.name):
         printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Permanent")
-        await tc.edit(name=getPTCNameFromTTCName(tc.name), topic=getUpdatedTopic(tc, lvl+1))
+        await tc.edit(name=getPTCNameFromTTCName(tc.name))
+        await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
         await tc.send(PTC_MESSAGE)
     elif isPTC(tc.name):
         printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Permanent. But it is already Permanent")
@@ -225,7 +228,8 @@ async def makePermanentTC(tc:TextChannel, lvl:int):
 async def makeTransientTC(tc:TextChannel, lvl:int):
     if isPTC(tc.name):
         printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Transient")
-        await tc.edit(name=getTTCNameFromPTCName(tc.name), topic=getUpdatedTopic(tc, lvl+1))
+        await tc.edit(name=getTTCNameFromPTCName(tc.name))
+        await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
         await tc.send(TTC_MESSAGE)
     elif isTTC(tc.name):
         printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Transient. But it is already Transient")
