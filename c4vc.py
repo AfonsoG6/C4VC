@@ -79,10 +79,11 @@ def getTopic(vcName:str, tcName:str) -> str :
     + (TTC_MESSAGE if isTTC(tcName) else PTC_MESSAGE).replace("now", "currently") + "\n" \
     + f"You can change this behavior by writing '{MAKE_PTC_COMMAND}'/'{MAKE_PTC_COMMAND_ABREV}' or '{MAKE_TTC_COMMAND}'/'{MAKE_TTC_COMMAND_ABREV}' in this channel."
 
-def getUpdatedTopic(tc:TextChannel) -> str :
+def getUpdatedTopic(tc:TextChannel, lvl:int) -> str :
     # This function is flimsy, it assumes the topic is in a specific format found in getTopic()
     lines = tc.topic.split("\n")
     if len(lines) != 3:
+        printlvl(lvl, f"Invalid topic format: '{tc.topic}'")
         raise Exception("Invalid topic format")
     return lines[0] + "\n" \
     + (TTC_MESSAGE if isTTC(tc.name) else PTC_MESSAGE).replace("now", "currently") + "\n" \
@@ -210,24 +211,24 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
         role = findRole(vc.guild, vc.name)
     await member.add_roles(role, reason="User joined VC")
 
-async def makePermanentTC(tc:TextChannel):
+async def makePermanentTC(tc:TextChannel, lvl:int):
     if isTTC(tc.name):
-        printlvl(0, f"Making '{tc.name}' from '{tc.guild.name}' Permanent")
-        await tc.edit(name=getPTCNameFromTTCName(tc.name), topic=getUpdatedTopic(tc))
+        printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Permanent")
+        await tc.edit(name=getPTCNameFromTTCName(tc.name), topic=getUpdatedTopic(tc, lvl+1))
         await tc.send(PTC_MESSAGE)
     elif isPTC(tc.name):
-        printlvl(0, f"Tried to make '{tc.name}' from '{tc.guild.name}' Permanent. But it is already Permanent")
+        printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Permanent. But it is already Permanent")
         await tc.send("This text channel is already permanent.")
     else:
         await tc.send("This text channel is not managed by C4VC.")
 
-async def makeTransientTC(tc:TextChannel):
+async def makeTransientTC(tc:TextChannel, lvl:int):
     if isPTC(tc.name):
-        printlvl(0, f"Making '{tc.name}' from '{tc.guild.name}' Transient")
-        await tc.edit(name=getTTCNameFromPTCName(tc.name), topic=getUpdatedTopic(tc))
+        printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Transient")
+        await tc.edit(name=getTTCNameFromPTCName(tc.name), topic=getUpdatedTopic(tc, lvl+1))
         await tc.send(TTC_MESSAGE)
     elif isTTC(tc.name):
-        printlvl(0, f"Tried to make '{tc.name}' from '{tc.guild.name}' Transient. But it is already Transient")
+        printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Transient. But it is already Transient")
         await tc.send("This text channel is already transient.")
     else:
         await tc.send("This text channel is not managed by C4VC.")
@@ -310,9 +311,9 @@ async def on_message(message:Message):
     if message.author.bot:
         return
     if message.content in [MAKE_TTC_COMMAND, MAKE_TTC_COMMAND_ABREV]:
-        await makeTransientTC(tc)
+        await makeTransientTC(tc, 0)
     elif message.content in [MAKE_PTC_COMMAND, MAKE_PTC_COMMAND_ABREV]:
-        await makePermanentTC(tc)
+        await makePermanentTC(tc, 0)
 
 @client.event
 async def on_guild_channel_update(before:abc.GuildChannel, after:abc.GuildChannel):
