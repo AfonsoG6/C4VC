@@ -11,10 +11,10 @@ END_SESSION_MSG = "`+------------------------------------+`" + "\n" \
                 + "`|           END OF SESSION           |`" + "\n" \
                 + "`+------------------------------------+`"
 
-C4VC_TC_PRE = "🔒"
-C4VC_TTC_SUF = "-ttc4vc"
-C4VC_PTC_SUF = "-ptc4vc"
-C4VC_ROLE_SUF = "-role4vc"
+C4VC_TC_PRE = "🔒᲼"
+C4VC_TTC_SUF = "᲼🇹"
+C4VC_PTC_SUF = "᲼🇵"
+C4VC_ROLE_SUF = "᲼Role"
 
 MAKE_TTC_COMMAND = "?transient"
 MAKE_TTC_COMMAND_ABREV = "?t"
@@ -41,11 +41,11 @@ def makeValidName(name:str) -> str :
     # Remove emojis
     pattern = re.compile(pattern = r"[^a-zA-Z0-9_\- ]+", flags = re.UNICODE)
     name = pattern.sub('', name)
-    # Replace spaces with underscores
-    name = name.replace(" ", "_")
+    # Replace spaces with an allowed invisible character
+    name = name.replace(" ", "᲼")
     # OPTIONAL: Remove underscores at the begining
-    while len(name) >= 2 and name[0] == "_":
-        name = name[1:]
+    # while len(name) >= 2 and name[0] == "_":
+    #     name = name[1:]
     # Transform into lowercase
     name = name.lower()
     return name
