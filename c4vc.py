@@ -77,7 +77,7 @@ def isPTC(tcName:str) -> bool:
 def getTopic(vcName:str, tcName:str) -> str :
     return f"This text channel is private for people on the VC: **{vcName}**\n" \
     + (TTC_MESSAGE if isTTC(tcName) else PTC_MESSAGE).replace("now", "currently") + "\n" \
-    + f"You can change this behavior by writing `{MAKE_PTC_COMMAND}`/`{MAKE_PTC_COMMAND_ABREV}` or `{MAKE_TTC_COMMAND}`/`{MAKE_TTC_COMMAND_ABREV}` in this channel."
+    + f"You can change this behavior by writing '{MAKE_PTC_COMMAND}'/'{MAKE_PTC_COMMAND_ABREV}' or '{MAKE_TTC_COMMAND}'/'{MAKE_TTC_COMMAND_ABREV}' in this channel."
 
 def getUpdatedTopic(tc:TextChannel) -> str :
     # This function is flimsy, it assumes the topic is in a specific format found in getTopic()
