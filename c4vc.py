@@ -17,11 +17,13 @@ C4VC_TTC_SUF = "᲼🇹"
 C4VC_PTC_SUF = "᲼🇵"
 C4VC_ROLE_SUF = "᲼role"
 
-MAKE_TTC_COMMAND = "?transient"
-MAKE_TTC_COMMAND_ABREV = "?t"
+TTC_MESSAGE = "This text channel is now **Transient**. It will be deleted when everyone leaves the VC."
+MAKE_TTC_COMMAND = "+transient"
+MAKE_TTC_COMMAND_ABREV = "+t"
 
-MAKE_PTC_COMMAND = "?permanent"
-MAKE_PTC_COMMAND_ABREV = "?p"
+PTC_MESSAGE = "This text channel is now **Permanent**. It won't be deleted even if everyone leaves the VC."
+MAKE_PTC_COMMAND = "+permanent"
+MAKE_PTC_COMMAND_ABREV = "+p"
 
 DO_SEND_ESMSG = True	# If bot sends a message marking the end of the session in a PTC
 
@@ -71,6 +73,20 @@ def isTTC(tcName:str) -> bool:
 
 def isPTC(tcName:str) -> bool:
     return re.search(pattern = rf"{C4VC_PTC_SUF}$", string=tcName) != None
+
+def getTopic(vcName:str, tcName:str) -> str :
+    return f"This text channel is private for people on the VC: **{vcName}**\n" \
+    + (TTC_MESSAGE if isTTC(tcName) else PTC_MESSAGE).replace("now", "currently") + "\n" \
+    + f"You can change this behavior by writing `{MAKE_PTC_COMMAND}`/`{MAKE_PTC_COMMAND_ABREV}` or `{MAKE_TTC_COMMAND}`/`{MAKE_TTC_COMMAND_ABREV}` in this channel."
+
+def getUpdatedTopic(tc:TextChannel) -> str :
+    # This function is flimsy, it assumes the topic is in a specific format found in getTopic()
+    lines = tc.topic.split("\n")
+    if len(lines) != 3:
+        raise Exception("Invalid topic format")
+    return lines[0] + "\n" \
+    + (TTC_MESSAGE if isTTC(tc.name) else PTC_MESSAGE).replace("now", "currently") + "\n" \
+    + lines[2]
 
 def findRole(guild:Guild, vcName:str) -> Role or None :
     roleName = getRoleName(vcName)
@@ -130,14 +146,11 @@ async def setupTC(vc:VoiceChannel, role:Role, lvl:int) -> TextChannel :
         if tc == None:
             raise Exception("Couldn't create TC")
         # Remove all permissions from the channel
-        await tc.edit(sync_permissions=False)
+        await tc.edit(sync_permissions=False, topic=getTopic(vc.name, tc.name))
         for perm in tc.overwrites:
             await tc.set_permissions(perm, overwrite=None)
         await tc.set_permissions(guild.default_role, send_messages=False, read_messages=False)
         await tc.set_permissions(role, send_messages=True, read_messages=True)
-        await tc.send(f"This text channel is private for people on the VC: **{vc.name}**\n"\
-                + f"This channel is currently **Transient**. Which means that it will be deleted when everyone leaves the VC.\n" \
-                + f"You can change this behavior by writing `{MAKE_PTC_COMMAND}`/`{MAKE_PTC_COMMAND_ABREV}` or `{MAKE_TTC_COMMAND}`/`{MAKE_TTC_COMMAND_ABREV}` in this channel.")
     return tc
 
 async def setupRoleAndTC(vc:VoiceChannel, lvl:int):
@@ -200,8 +213,8 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 async def makePermanentTC(tc:TextChannel):
     if isTTC(tc.name):
         printlvl(0, f"Making '{tc.name}' from '{tc.guild.name}' Permanent")
-        await tc.edit(name=getPTCNameFromTTCName(tc.name))
-        await tc.send("This text channel is now **Permanent**. It won't be deleted even if everyone leaves the VC.")
+        await tc.edit(name=getPTCNameFromTTCName(tc.name), topic=getUpdatedTopic(tc))
+        await tc.send(PTC_MESSAGE)
     elif isPTC(tc.name):
         printlvl(0, f"Tried to make '{tc.name}' from '{tc.guild.name}' Permanent. But it is already Permanent")
         await tc.send("This text channel is already permanent.")
@@ -211,8 +224,8 @@ async def makePermanentTC(tc:TextChannel):
 async def makeTransientTC(tc:TextChannel):
     if isPTC(tc.name):
         printlvl(0, f"Making '{tc.name}' from '{tc.guild.name}' Transient")
-        await tc.edit(name=getTTCNameFromPTCName(tc.name))
-        await tc.send("This text channel is now **Transient**. It will be deleted if everyone leaves the VC.")
+        await tc.edit(name=getTTCNameFromPTCName(tc.name), topic=getUpdatedTopic(tc))
+        await tc.send(TTC_MESSAGE)
     elif isTTC(tc.name):
         printlvl(0, f"Tried to make '{tc.name}' from '{tc.guild.name}' Transient. But it is already Transient")
         await tc.send("This text channel is already transient.")
