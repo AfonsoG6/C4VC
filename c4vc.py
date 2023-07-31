@@ -12,20 +12,20 @@ END_SESSION_MSG = "`+------------------------------------+`" + "\n" \
                 + "`+------------------------------------+`"
 
 # Invisible characters are used for uniqueness
-C4VC_TC_PRE = "🔒"
-C4VC_TTC_SUF = "᲼🇹"
-C4VC_PTC_SUF = "᲼🇵"
-C4VC_ROLE_SUF = "᲼role"
+C4VC_TC_PRE = "🔒│"
+C4VC_TTC_SUF = "│𝖳"
+C4VC_PTC_SUF = "│𝖯"
+C4VC_ROLE_SUF = "│𝖱"
 
 TTC_MESSAGE = "This text channel is now **Transient**. It will be deleted when everyone leaves the VC."
-MAKE_TTC_COMMAND = "+transient"
-MAKE_TTC_COMMAND_ABREV = "+t"
+MAKE_TTC_COMMAND = "!transient"
+MAKE_TTC_COMMAND_ABREV = "!t"
 
 PTC_MESSAGE = "This text channel is now **Permanent**. It won't be deleted even if everyone leaves the VC."
-MAKE_PTC_COMMAND = "+permanent"
-MAKE_PTC_COMMAND_ABREV = "+p"
+MAKE_PTC_COMMAND = "!permanent"
+MAKE_PTC_COMMAND_ABREV = "!p"
 
-DO_SEND_ESMSG = True	# If bot sends a message marking the end of the session in a PTC
+DO_SEND_ESMSG = False	# If bot sends a message marking the end of the session in a PTC
 
 client = Client(intents=Intents.all())
 
