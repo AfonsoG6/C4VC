@@ -13,20 +13,20 @@ END_SESSION_MSG = "`+------------------------------------+`" + "\n" \
                 + "`+------------------------------------+`"
 
 # Invisible characters are used for uniqueness
-C4VC_TC_PRE = "🔒"
-C4VC_TTC_SUF = "᲼🇹"
-C4VC_PTC_SUF = "᲼🇵"
-C4VC_ROLE_SUF = "᲼role"
+C4VC_TC_PRE = "🔒│"
+C4VC_TTC_SUF = "│𝖳"
+C4VC_PTC_SUF = "│𝖯"
+C4VC_ROLE_SUF = "│𝖱"
 
 TTC_MESSAGE = "This text channel is now **Transient**. It will be deleted when everyone leaves the VC."
-MAKE_TTC_COMMAND = "+transient"
-MAKE_TTC_COMMAND_ABREV = "+t"
+MAKE_TTC_COMMAND = "!transient"
+MAKE_TTC_COMMAND_ABREV = "!t"
 
 PTC_MESSAGE = "This text channel is now **Permanent**. It won't be deleted even if everyone leaves the VC."
-MAKE_PTC_COMMAND = "+permanent"
-MAKE_PTC_COMMAND_ABREV = "+p"
+MAKE_PTC_COMMAND = "!permanent"
+MAKE_PTC_COMMAND_ABREV = "!p"
 
-DO_SEND_ESMSG = True	# If bot sends a message marking the end of the session in a PTC
+DO_SEND_ESMSG = False	# If bot sends a message marking the end of the session in a PTC
 
 client = Client(intents=Intents.all())
 
@@ -87,7 +87,7 @@ def getUpdatedTopic(tc:TextChannel, lvl:int) -> str :
         printlvl(lvl, f"Invalid topic format: '{tc.topic}'")
         raise Exception("Invalid topic format")
     newTopic = lines[0] + "\n" \
-    + (TTC_MESSAGE if isTTC(tc.name) else PTC_MESSAGE).replace("now", "currently") + "\n" \
+    + (TTC_MESSAGE if isPTC(tc.name) else PTC_MESSAGE).replace("now", "currently") + "\n" \
     + lines[2]
     printlvl(lvl, f"Updated topic: '{newTopic}'")
     return newTopic
@@ -217,8 +217,9 @@ async def processUserJoin(vc:VoiceChannel, member:Member, lvl:int):
 async def makePermanentTC(tc:TextChannel, lvl:int):
     if isTTC(tc.name):
         printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Permanent")
-        await tc.edit(name=getPTCNameFromTTCName(tc.name))
-        #await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
+        newName:str = getPTCNameFromTTCName(tc.name)
+        newTopic:str = getUpdatedTopic(tc, lvl+1)
+        tc = await tc.edit(name=newName, topic=newTopic)
         await tc.send(PTC_MESSAGE)
     elif isPTC(tc.name):
         printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Permanent. But it is already Permanent")
@@ -229,8 +230,9 @@ async def makePermanentTC(tc:TextChannel, lvl:int):
 async def makeTransientTC(tc:TextChannel, lvl:int):
     if isPTC(tc.name):
         printlvl(lvl, f"Making '{tc.name}' from '{tc.guild.name}' Transient")
-        await tc.edit(name=getTTCNameFromPTCName(tc.name))
-        #await tc.edit(topic=getUpdatedTopic(tc, lvl+1))
+        newName:str = getTTCNameFromPTCName(tc.name)
+        newTopic:str = getUpdatedTopic(tc, lvl+1)
+        tc = await tc.edit(name=newName, topic=newTopic)
         await tc.send(TTC_MESSAGE)
     elif isTTC(tc.name):
         printlvl(lvl, f"Tried to make '{tc.name}' from '{tc.guild.name}' Transient. But it is already Transient")
