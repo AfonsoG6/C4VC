@@ -2,6 +2,7 @@ from unicodedata import normalize
 from dotenv import load_dotenv
 from asyncio import Lock
 from discord import *
+from time import sleep
 import re
 import os
 
@@ -335,13 +336,15 @@ async def on_guild_channel_update(before:abc.GuildChannel, after:abc.GuildChanne
 
 #-----------------------------Run and Connect Bot------------------------------
 
-try:
-    load_dotenv()
-    token = os.getenv('TOKEN')
-    if token == None:
-        print("[ERROR] Please provide a token in the .env file")
-        input("        Press ENTER to exit...")
-        exit(1)
-    client.run(token)
-except Exception as e:
-    print(e)
+while True:
+    try:
+        load_dotenv()
+        token = os.getenv('TOKEN')
+        if token == None:
+            print("[ERROR] Please provide a token in the .env file")
+            input("        Press ENTER to exit...")
+            exit(1)
+        client.run(token)
+    except Exception as e:
+        print(e)
+    sleep(300)
