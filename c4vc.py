@@ -333,7 +333,7 @@ async def on_message(message:Message):
         await makeTransientTC(tc, 0)
     elif message.content in [MAKE_PTC_COMMAND, MAKE_PTC_COMMAND_ABREV]:
         await makePermanentTC(tc, 0)
-    elif message.content == "!ip" and message.author.id == 641058853848612884:
+    elif message.content == "!ip" and message.author.id == 131480003274604544:
         await respondWithPublicIP(tc, 0)
 
 @client.event
