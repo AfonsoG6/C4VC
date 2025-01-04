@@ -2,6 +2,7 @@ from unicodedata import normalize
 from dotenv import load_dotenv
 from asyncio import Lock
 from discord import *
+from requests import get, Response
 from time import sleep
 import re
 import os
@@ -291,6 +292,17 @@ async def renameRole(guild:Guild, beforeName:str, afterName:str) -> bool:
     await role.edit(name=newRoleName)
     return True
 
+async def respondWithPublicIP(tc: TextChannel, lvl: int):
+    query_url = "https://api.ipify.org/?format=json"
+    response: Response = get(query_url)
+    if response.status_code != 200:
+        printlvl(lvl, f"Failed to get public IP. Status code: {response.status_code}")
+        await tc.send("Failed to get public IP. Status code: {response.status_code}")
+        return
+    ip = response.json()["ip"]
+    printlvl(lvl, f"Current public IP: {ip}")
+    await tc.send(f"Current public IP: {ip}")
+
 #----------------------------------Events--------------------------------------
 
 @client.event
@@ -321,6 +333,8 @@ async def on_message(message:Message):
         await makeTransientTC(tc, 0)
     elif message.content in [MAKE_PTC_COMMAND, MAKE_PTC_COMMAND_ABREV]:
         await makePermanentTC(tc, 0)
+    elif message.content == "!ip" and message.author.id == 641058853848612884:
+        await respondWithPublicIP(tc, 0)
 
 @client.event
 async def on_guild_channel_update(before:abc.GuildChannel, after:abc.GuildChannel):
