@@ -357,10 +357,10 @@ while True:
         load_dotenv()
         token = os.getenv('TOKEN')
         if token == None:
-            print("[ERROR] Please provide a token in the .env file")
-            input("        Press ENTER to exit...")
+            print("[ERROR] Please provide a token in the .env file.")
             exit(1)
         client.run(token)
     except Exception as e:
+        print("[ERROR] An error occurred while running the bot:")
         print(e)
-    sleep(300)
+        exit(1)
